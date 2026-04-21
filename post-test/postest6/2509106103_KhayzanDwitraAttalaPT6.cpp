@@ -74,7 +74,10 @@ int getRadixCharValueFromLeft(const string &text, int posFromLeft) {
         return 0;
     }
 
-    unsigned char c = static_cast<unsigned char>(text[static_cast<string::size_type>(posFromLeft)]);
+    unsigned char c = static_cast<unsigned char>(
+        text[static_cast<string::size_type>(posFromLeft)]
+    );
+
     c = static_cast<unsigned char>(toupper(c));
 
     if (c >= 'A' && c <= 'Z') {
@@ -590,41 +593,37 @@ void displayFoundDriver(const Driver &driver, int index) {
 
 // ================= SEARCH =================
 
-int fibonacciSearchByName(Driver *drivers, int totalDrivers, const string &target) {
-    int fibMMm2 = 0;
-    int fibMMm1 = 1;
-    int fibM = fibMMm2 + fibMMm1;
-
-    while (fibM < totalDrivers) {
-        fibMMm2 = fibMMm1;
-        fibMMm1 = fibM;
-        fibM = fibMMm2 + fibMMm1;
+int jumpSearchByName(Driver *drivers, int totalDrivers, const string &target) {
+    if (totalDrivers <= 0) {
+        return -1;
     }
 
-    int offset = -1;
     string targetUpper = toUpperCase(target);
 
-    while (fibM > 1) {
-        int i = (offset + fibMMm2 < totalDrivers - 1) ? (offset + fibMMm2) : (totalDrivers - 1);
-        string current = toUpperCase((drivers + i)->name);
+    int step = 1;
+    while (step * step < totalDrivers) {
+        step++;
+    }
 
-        if (current < targetUpper) {
-            fibM = fibMMm1;
-            fibMMm1 = fibMMm2;
-            fibMMm2 = fibM - fibMMm1;
-            offset = i;
-        } else if (current > targetUpper) {
-            fibM = fibMMm2;
-            fibMMm1 = fibMMm1 - fibMMm2;
-            fibMMm2 = fibM - fibMMm1;
-        } else {
-            return i;
+    int prev = 0;
+    int current = step;
+
+    while (prev < totalDrivers &&
+           toUpperCase((drivers + ((current < totalDrivers) ? current : totalDrivers) - 1)->name) < targetUpper) {
+        prev = current;
+        current += step;
+
+        if (prev >= totalDrivers) {
+            return -1;
         }
     }
 
-    if (fibMMm1 != 0 && offset + 1 < totalDrivers &&
-        toUpperCase((drivers + offset + 1)->name) == targetUpper) {
-        return offset + 1;
+    int end = (current < totalDrivers) ? current : totalDrivers;
+
+    for (int i = prev; i < end; i++) {
+        if (toUpperCase((drivers + i)->name) == targetUpper) {
+            return i;
+        }
     }
 
     return -1;
@@ -640,9 +639,7 @@ int binarySearchByAge(Driver *drivers, int totalDrivers, int targetAge) {
 
         if (ageMid == targetAge) {
             return mid;
-        }
-
-        if (ageMid < targetAge) {
+        } else if (ageMid < targetAge) {
             left = mid + 1;
         } else {
             right = mid - 1;
@@ -672,7 +669,7 @@ void searchDriverMenu(Driver drivers[], int totalDrivers) {
     int choice;
 
     cout << "\n=== SEARCH DRIVER ===\n";
-    cout << "1. Nama Driver (Fibonacci Search)\n";
+    cout << "1. Nama Driver (Jump Search)\n";
     cout << "2. Umur (Binary Search)\n";
     cout << "3. Tahun Lahir (Linear Search)\n";
     cout << "Pilih: ";
@@ -697,7 +694,7 @@ void searchDriverMenu(Driver drivers[], int totalDrivers) {
 
         radixSortDriversByName(temp, totalDrivers);
 
-        int index = fibonacciSearchByName(temp, totalDrivers, targetName);
+        int index = jumpSearchByName(temp, totalDrivers, targetName);
         if (index != -1) {
             displayFoundDriver(temp[index], index);
         } else {
